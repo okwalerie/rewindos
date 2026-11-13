@@ -109,6 +109,57 @@ heartbeat opt-out does not disable update checks. Optional semantic search needs
 Ollama/models; meeting transcription needs a Whisper model. Neither is installed
 or downloaded by this build.
 
+## Fedora RPM and local rpm-ostree overlay
+
+The workflow also builds `rewindos-*.aarch64.rpm` in Fedora 44. RPM's ELF scanner
+records the actual shared-library requirements; explicit dependencies install
+Tesseract, English OCR data, AppIndicator, PipeWire, and the portal framework.
+A Fedora container installs the RPM and checks its files, daemon, UI and a known
+OCR fixture. The service uses `/usr/bin/rewindos-daemon`, not a home-directory
+binary. Installation does not enable its service or create autostart entries.
+
+Download the successful workflow's `rewindos-linux-aarch64` artifact, extract it
+into one directory on Asahi, and verify its checksum files there:
+
+```sh
+sha256sum -c ./*.rpm.sha256
+sudo rpm-ostree install ./rewindos-*.aarch64.rpm
+```
+
+This stages a deployment and pulls Tesseract from Fedora's configured signed
+repositories. English data already present in the base satisfies that dependency.
+Reboot when ready, then run:
+
+```sh
+rpm -q rewindos tesseract tesseract-langpack-eng
+/usr/bin/rewindos-daemon --version
+tesseract --list-langs
+/usr/bin/rewindos
+```
+
+A reboot is not automatic. Stop any source-build daemon before starting the
+packaged daemon; the package does not migrate or remove files in `~/.local`.
+Existing user units, launchers and PATH entries can override the package: inspect
+`systemctl --user cat rewindos-daemon.service` and `command -v rewindos`.
+User data remains in `~/.rewindos`; do not delete it. To opt into the packaged
+service after confirming the unit path, use
+`systemctl --user enable --now rewindos-daemon.service`.
+
+Tesseract is the default because it has Fedora-native ARM64 packages and needs
+no extra Python environment or model bootstrap. PaddleOCR remains optional;
+this package neither installs nor selects it. The fixed local-RPM overlay does
+not auto-track GitHub: stage a newer downloaded RPM explicitly to update it.
+RPMs are currently unsigned; verify the artifact came from the expected fork,
+workflow commit and successful run. Its checksum is an integrity check, not a
+publisher signature. Do not disable Fedora dependency signature verification.
+
+For Tesseract alone, the same supported host overlay is
+`sudo rpm-ostree install tesseract` (plus a reboot); the English language pack
+is already installed on the inspected Asahi deployment. Including it as the
+RewindOS RPM's dependency avoids a separate overlay request and a second reboot.
+For a future permanent image default, add it to the BlueBuild recipe instead;
+no OS image change is required for this optional app overlay.
+
 ## GitHub Actions
 
 `.github/workflows/linux-aarch64.yml` builds the container, runs the same build

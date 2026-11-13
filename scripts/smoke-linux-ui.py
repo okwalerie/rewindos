@@ -55,7 +55,7 @@ def main():
                XDG_DATA_HOME=str(home / ".local/share"), XDG_CACHE_HOME=str(home / ".cache"),
                GDK_BACKEND="x11", LIBGL_ALWAYS_SOFTWARE="1")
     with open(home / "ui.log", "w") as log:
-        app = subprocess.Popen(["target/release/rewindos"], env=env, stdout=log,
+        app = subprocess.Popen([os.environ.get("REWINDOS_SMOKE_BINARY", "target/release/rewindos")], env=env, stdout=log,
                                stderr=subprocess.STDOUT, start_new_session=True)
         try:
             deadline = time.monotonic() + 30
