@@ -1,0 +1,60 @@
+name: Linux ARM64 container build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [build/linux-aarch64]
+  pull_request:
+    paths:
+      - '.github/workflows/linux-aarch64.yml'
+      - 'packaging/linux/**'
+      - 'scripts/build-linux.sh'
+      - 'Cargo.*'
+      - 'crates/**'
+      - 'src-tauri/**'
+      - 'src/**'
+      - 'package.json'
+      - 'bun.lock'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: linux-aarch64-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      # Same native container and entry point used on Asahi; no cross sysroot,
+      # QEMU, privileged container, host credentials, or release permission.
+      - name: Build Ubuntu 24.04 toolchain image
+        run: docker build -f packaging/linux/Containerfile -t rewindos-builder .
+      - name: Test, build and package
+        run: |
+          docker run --rm \
+            --user "$(id -u):$(id -g)" \
+            -e HOME=/work/.build-home \
+            -e CARGO_HOME=/work/.build-home/cargo \
+            -e CARGO_BUILD_JOBS=2 \
+            -v "$PWD:/work" \
+            rewindos-builder
+      - name: Smoke-test the UI without network or the host desktop
+        run: |
+          docker run --rm --network none \
+            --user "$(id -u):$(id -g)" \
+            -e HOME=/work/.build-home \
+            -v "$PWD:/work" \
+            rewindos-builder python3 scripts/smoke-linux-ui.py
+      - name: Upload ARM64 test build
+        uses: actions/upload-artifact@v4
+        with:
+          name: rewindos-linux-aarch64
+          path: |
+            dist/rewindos-linux-aarch64.tar.gz
+            dist/rewindos-linux-aarch64.tar.gz.sha256
+          if-no-files-found: error
+          retention-days: 14
