@@ -3,7 +3,7 @@ name: Linux ARM64 container build
 on:
   workflow_dispatch:
   push:
-    branches: [build/linux-aarch64]
+    branches: [master, build/linux-aarch64]
   pull_request:
     paths:
       - '.github/workflows/linux-aarch64.yml'
@@ -55,7 +55,7 @@ jobs:
             -v "$PWD:/work" \
             rewindos-builder python3 scripts/smoke-linux-ui.py
       - name: Build Fedora RPM toolchain image
-        run: docker build -f packaging/linux/Containerfile.rpm -t rewindos-rpm-builder .
+        run: docker build -f packaging/linux/rpm.Containerfile -t rewindos-rpm-builder .
       - name: Package a native Fedora RPM
         run: |
           docker run --rm --user "$(id -u):$(id -g)" \
@@ -70,7 +70,7 @@ jobs:
           docker run --rm --network none --user "$(id -u):$(id -g)" \
             -e HOME=/work/.build-home -e REWINDOS_SMOKE_BINARY=/usr/bin/rewindos \
             -v "$PWD:/work" rewindos-rpm-validated \
-            bash -ec 'python3 scripts/smoke-linux-ui.py; python3 scripts/smoke-ocr.py'
+            bash -ec 'python3 scripts/check-asahi-elf.py /usr/bin/rewindos /usr/bin/rewindos-daemon; python3 scripts/smoke-linux-ui.py; python3 scripts/smoke-ocr.py'
       - name: Upload ARM64 test build
         uses: actions/upload-artifact@v4
         with:

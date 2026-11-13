@@ -164,7 +164,7 @@ no OS image change is required for this optional app overlay.
 
 `.github/workflows/linux-aarch64.yml` builds the container, runs the same build
 and isolated UI test, and uploads the archive/checksum as a 14-day workflow
-artifact. It runs on pushes to `build/linux-aarch64`, relevant pull requests,
+artifact. It runs on pushes to `master` and `build/linux-aarch64`, relevant pull requests,
 and manual dispatch. It needs only `contents: read`; it neither publishes a
 release nor touches AUR. No version-tag gate can silently skip compilation.
 

@@ -10,6 +10,7 @@ Source0:        rewindos-linux-%{_arch}.tar.gz
 %global debug_package %{nil}
 %global _build_id_links none
 
+BuildRequires:  systemd-rpm-macros
 Requires:       tesseract
 Requires:       tesseract-langpack-eng
 Requires:       libappindicator-gtk3
@@ -52,3 +53,7 @@ install -Dpm644 icons/icon.png %{buildroot}%{_datadir}/icons/hicolor/512x512/app
 %{_datadir}/applications/com.rewindos.Daemon.desktop
 /usr/lib/rewindos/
 %{_datadir}/icons/hicolor/*/apps/io.github.jaypopat.rewindos.png
+
+%changelog
+* Fri Nov 13 2026 Walerie <okwalerie@users.noreply.github.com>
+- Package native ARM64 binaries with Tesseract and opt-in user service.
