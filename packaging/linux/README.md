@@ -23,6 +23,10 @@ podman run --rm --network none --userns=keep-id \
   python3 scripts/smoke-linux-ui.py
 ```
 
+Run build and smoke containers sequentially: `:Z` gives the workspace a private
+SELinux label, so a second container mounting it with `:Z` will revoke the first
+container's access. Do not overlap them.
+
 Choose a fresh container name for another build, or start an existing stopped
 build container. Docker uses the same commands without `--userns=keep-id` and,
 on hosts without SELinux, without the `:Z` volume suffix. The dependency cache
